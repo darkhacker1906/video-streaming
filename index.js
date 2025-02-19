@@ -40,29 +40,27 @@ const storage = multer.diskStorage({
     const outputPath=`./uploads/courses/${lessionId}`;
     const hlsPath=`${outputPath}/index.m3u8`;
     console.log(hlsPath,'hlsPathhlsPath');
-   if(fs.existsSync(outputPath)){
-      fs.mkdirSync(outputPath);
+   if(!fs.existsSync(outputPath)){
+      fs.mkdirSync(outputPath,{recursive:true});
    }
    //ffmpeg command
-   const ffmpegCommand = `ffmpeg -i ${videoPath} 
-   -codec:v libx264 -codec:a aac -hls_time 10 -hls_playlist_type
-    vod -hls_segment_filename "${outputPath}/segment%03d.
-    ts" -start_number 0 ${hlsPath}`;
+   const ffmpegCommand = `ffmpeg -i ${videoPath} -codec:v libx264 -codec:a aac -hls_time 10 -hls_playlist_type vod -hls_segment_filename "${outputPath}/segment%03d.ts" -start_number 0 "${hlsPath}"`;
+
 
     //no queue because of POC , not to b used in production
     exec(ffmpegCommand,(error,stdout,stderr)=>{
        if(error){
         console.log(`execution error: ${error}`);
        }
+       console.log(`stdout error: ${stdout}`);
+       console.log(`stderr error: ${stderr}`);
+       const videoUrl=`http://localhost:8000/uploads/courses/${lessionId}/index.m3u8`;
+       res.json({
+         message:"Video converted to HLS format",
+         videoUrl:videoUrl,
+         lessionId:lessionId,
+       });
     })
-    console.log(`stdout error: ${stdout}`);
-    console.log(`stderr error: ${stderr}`);
-    const videoUrl=`http://localhost:8000/uploads/courses/${lessionId}/index.m3u8`;
-    res.json({
-      message:"Video converted to HLS format",
-      videoUrl:videoUrl,
-      lessionId:lessionId,
-    });
   })
 
 app.get('/',function(req,res){
